@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Encapsulate field &apos;nlp.sea.lesk.Sense.overlaps&apos; in &apos;nlp.sea.lesk.Sense&apos;&#x0D;&#x0A;- Original project: &apos;SimplifiedLesk&apos;&#x0D;&#x0A;- Original element: &apos;nlp.sea.lesk.Sense.overlaps&apos;&#x0D;&#x0A;- Getter method name: &apos;getOverlaps&apos;&#x0D;&#x0A;- Setter method name: &apos;setOverlaps&apos;&#x0D;&#x0A;- Field visibility: &apos;public&apos;&#x0D;&#x0A;- Use getter and setter methods in declaring type" comments="false" declaring="true" description="Encapsulate field &apos;overlaps&apos;" flags="589830" getter="getOverlaps" id="org.eclipse.jdt.ui.self.encapsulate" input="/src&lt;nlp.sea.lesk{Sense.java[Sense^overlaps" insertion="10" setter="setOverlaps" stamp="1447598769179" version="1.0" visibility="1"/>
+</session>

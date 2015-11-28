@@ -1,0 +1,92 @@
+
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream.GetField;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import edu.mit.jwi.*;
+import edu.mit.jwi.item.IIndexWord;
+import edu.mit.jwi.item.ILexFile;
+import edu.mit.jwi.item.ISenseKey;
+import edu.mit.jwi.item.IWord;
+import edu.mit.jwi.item.IWordID;
+import edu.mit.jwi.item.POS;
+public class WordSenseDisambiguation {
+	
+
+		public static void main(String[] args) throws IOException{
+
+	        
+	        String sentence = "The bank can guarantee deposits will eventually cover future tuition costs because it invests in adjustable-rate mortgage securities.";
+	        String word ="bank";
+	        System.out.println("\n\n\t\t\t\t****************  OUTPUT *****************\n\n");
+	        System.out.println("****** Given Word  ******\n\n");
+	        System.out.println("Word: \t\t"+ word+"\n");
+	          String bestSense = simplifiedLesk(word,sentence,args[0]);
+	        
+		}
+
+	static String simplifiedLesk(String inputWord, String sentence,String wordNetPath) throws IOException{
+		String bestSense = null,bestSenseIndex=null;
+		int maxOverlap =0;
+		Set<String> overlapStrings = null;
+		// D:\\Fall 2015\\NLP\\WordNet-3.0\\WordNet-3.0
+		//construct URL to WordNet Dictionary directory on the computer
+        String wordNetDirectory = wordNetPath;
+        String path = wordNetDirectory + File.separator + "dict";
+        URL url = new URL("file", null, path);      
+
+        //construct the Dictionary object and open it
+        IDictionary dict = new Dictionary(url);
+        dict.open();
+
+        sentence = sentence.replaceAll("[-+.^?;:,\"\\(\\)]","");
+        Set<String> sentenceSet = new HashSet<String>(Arrays.asList(sentence.split(" ")));
+        // get all parts of speech
+        POS[] arr = POS.values();
+        System.out.println("****** Displaying all word senses for \"Bank\" and their overlap counts ****** \n");
+        for(int j=0;j<arr.length;j++){
+        	IIndexWord idxWord = dict.getIndexWord (inputWord, arr[j] );
+        	if(idxWord!=null)
+        	{
+	 	        List<IWordID> listWordIDs = idxWord.getWordIDs();
+	 	        for(int i=0;i<listWordIDs.size();i++){
+		 	        IWordID wordID = idxWord.getWordIDs().get(i) ;
+		 	        IWord word = dict.getWord (wordID);         
+		 	        String gloss = word.getSynset().getGloss().replaceAll("[-+.^?;:,\"\\(\\)]",""); 
+		 	        String[] tokensGloss  = gloss.split(" ");
+			 	    Set<String> wordsInGloss = new HashSet<String>(Arrays.asList(tokensGloss));
+			 	    System.out.println("\nSense: \t\t\t\t"+inputWord+"-"+arr[j]+i+"\nGloss & Examples : \t\t"+word.getSynset().getGloss()); 
+			 	   System.out.println("Given Sentence: \t\t"+ sentence+"");
+				     
+			 	    Set<String> overlap = findIntersection(wordsInGloss,sentenceSet);
+			 	   
+				 	System.out.println( "Overlap Count: \t\t\t" + overlap.size());
+				 	    
+				 	if(overlap.size()>maxOverlap){
+			 	    	maxOverlap = overlap.size();
+			 	    	bestSense = word.getSynset().getGloss();
+			 	    	bestSenseIndex = "Sense: \t\t\t\t"+inputWord+"-"+arr[j]+i;
+			 	    	overlapStrings = overlap;
+			 	    }
+			    }
+ 	        }
+        }
+        System.out.println("\n\n******  Best Sense chosen ******\n");
+        System.out.println("\n"+bestSenseIndex +"\nGloss & Examples : \t\t"+bestSense+ "Overlap: \t\t\t"+overlapStrings.toString()+"\nOverlap Count: \t\t\t" + maxOverlap);
+	 	
+		return bestSense;
+	}
+	 static Set<String> findIntersection(Set<String> wordsInGloss,Set<String> sentenceSet){
+	
+		 Set<String> intersection = new HashSet<String>(wordsInGloss); // use the copy constructor
+		 intersection.retainAll(sentenceSet);
+		 System.out.println("Overlap: \t\t\t"+intersection.toString());
+		 return intersection;
+	 } 
+	
+}
