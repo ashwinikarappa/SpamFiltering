@@ -9,12 +9,18 @@ public class SpamFilter {
 	public static void main(String[] args) {
 		String trainingDirectory = args[0];
 		String testDirectory = args[1];
-		System.out.print("\n\n#### NAIVE BAYES CLASSIFIER ####\n\n");
-		System.out.print("\n **  Accuracy before removing the stop words **\n");
 		try {
+			System.out.print("\n\n#### NAIVE BAYES CLASSIFIER ####\n\n");
 			Bayes bayes = new Bayes(trainingDirectory, testDirectory);
 			bayes.train(true);
-			bayes.test(true);
+			bayes.test();
+			
+			System.out.print("\n\n#### After handling swear words ####\n\n");
+			bayes.testWithSwearWords();
+			
+			System.out.print("\n\n#### After handling common spam words ####\n\n");
+			bayes.testWithSwearWords();
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
