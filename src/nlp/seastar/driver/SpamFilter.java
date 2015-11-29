@@ -14,13 +14,12 @@ public class SpamFilter {
 			Bayes bayes = new Bayes(trainingDirectory, testDirectory);
 			bayes.train(true);
 			bayes.test();
-			
-			System.out.print("\n\n#### After handling swear words ####\n\n");
-			bayes.testWithSwearWords();
-			
+			// System.out.print("\n\n#### After handling swear words ####\n\n");
+			// bayes.trainWithSwearWords();
+			// bayes.testWithSwearWords();
 			System.out.print("\n\n#### After handling common spam words ####\n\n");
-			bayes.testWithSwearWords();
-			
+			bayes.trainWithSpamWords();
+			bayes.testWithSpamWords();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
