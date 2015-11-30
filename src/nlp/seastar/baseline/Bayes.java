@@ -1,12 +1,15 @@
 package nlp.seastar.baseline;
 
 import java.io.File;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
 import nlp.seastar.lexical.LexicalFeatures;
+import nlp.seastar.syntactic.SyntacticFeatures;
 
 /**
  * Naive Bayes classification of emails into ham or spam
@@ -19,15 +22,20 @@ public class Bayes {
 	private int numOfHamEmails;
 	private int numOfSpamWords;
 	private int numOfHamWords;
+	private int numOfSpamRules;
+	private int numOfHamRules;
 	private double priorSpamProbablity;
 	private double priorHamProbability;
 	private String trainDirectoryName;
 	private String testDirectoryName;
 	private HashMap<String, Word> trainingDictionary;
 	private LexicalFeatures lexical;
+	private SyntacticFeatures syntactic;
+	private HashMap<String, Word> syntacticRuleHashMap;
 
 	public Bayes() {
 		this.trainingDictionary = new HashMap<String, Word>();
+		this.syntacticRuleHashMap = new HashMap<String, Word>();
 		this.numOfHamEmails = 0;
 		this.numOfSpamEmails = 0;
 		this.numOfHamWords = 0;
@@ -35,12 +43,14 @@ public class Bayes {
 		this.priorHamProbability = 0.0;
 		this.priorSpamProbablity = 0.0;
 		this.lexical = new LexicalFeatures();
+		this.syntactic =new SyntacticFeatures();
 	}
 
 	public Bayes(String trainDirectoryName, String testDirectoryName) {
 		this.trainDirectoryName = trainDirectoryName;
 		this.testDirectoryName = testDirectoryName;
 		this.trainingDictionary = new HashMap<String, Word>();
+		this.syntacticRuleHashMap = new HashMap<String, Word>();
 		this.numOfHamEmails = 0;
 		this.numOfSpamEmails = 0;
 		this.numOfHamWords = 0;
@@ -48,6 +58,7 @@ public class Bayes {
 		this.priorHamProbability = 0.0;
 		this.priorSpamProbablity = 0.0;
 		this.lexical = new LexicalFeatures();
+		this.syntactic = new SyntacticFeatures();
 	}
 
 	/**
@@ -353,6 +364,95 @@ public class Bayes {
 					// Files.copy(file.toPath(), Paths.get(WRONG_HAM + "\\" + file.getName()));
 				}
 				scanner.close();
+			}
+			System.out.print("\n\n Classified " + testSpamCount + " as Spam\n Classified  "
+					+ testHamCount + " as Ham\n Accuracy = ");
+			if (directory.getName().equals("spam"))
+				System.out.print((double) (testSpamCount * 100) / (testSpamCount + testHamCount)
+						+ " %");
+			else
+				System.out.print((double) (testHamCount * 100) / (testSpamCount + testHamCount)
+						+ " %");
+		}
+	}
+
+	public void syntacticTrain() throws FileNotFoundException {
+		File trainDirectory = new File(trainDirectoryName);
+		File[] directories = trainDirectory.listFiles();
+		boolean isHam = false;
+		for (File directory : directories) {
+			if (directory.getName().equals("ham"))
+				isHam = true;
+			else
+				isHam = false;
+			File directoryPath = new File(trainDirectoryName + "\\" + directory.getName());
+			File[] files = directoryPath.listFiles();
+			for (File file : files) {
+				ArrayList<String> tags = (ArrayList<String>) syntactic.lemmatize(file);
+				ArrayList<String> ruleList = (ArrayList<String>) syntactic.makeRulelList(tags, 5);
+				for (int i = 0; i < ruleList.size(); i++) {
+					if (isHam)
+						numOfHamRules++;
+					else
+						numOfSpamRules++;
+					String rule = ruleList.get(i);
+					if (syntacticRuleHashMap.containsKey(rule)) {
+						Word word = syntacticRuleHashMap.get(rule);
+						if (isHam)
+							word.incrementHamCount();
+						else
+							word.incrementSpamCount();
+					} else {
+						Word word = new Word(isHam, rule);
+						syntacticRuleHashMap.put(rule, word);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * @throws IOException
+	 */
+	public void syntacticTest() throws IOException {
+		File testDirectory = new File(testDirectoryName);
+		File[] directories = testDirectory.listFiles();
+		for (File directory : directories) {
+			int testHamCount = 0;
+			int testSpamCount = 0;
+			File directoryPath = new File(testDirectoryName + "\\" + directory.getName());
+			File[] files = directoryPath.listFiles();
+			System.out.print("\nTest result for directory: " + directory.getName());
+			for (File file : files) {
+				double hamProbability = 0.0;
+				double spamProbability = 0.0;
+				ArrayList<String> testFileTags = (ArrayList<String>) syntactic.lemmatize(file);
+				ArrayList<String> testRuleList = (ArrayList<String>) syntactic.makeRulelList(testFileTags, 5);
+				for(int i=0;i<testRuleList.size();i++){
+					int spamRuleCount = 0;
+					int hamRuleCount = 0;
+					double ruleSpamProbability = 0.0;
+					double ruleHamProbability = 0.0;
+					if (syntacticRuleHashMap.containsKey(testRuleList.get(i))) {
+						Word word = syntacticRuleHashMap.get(testRuleList.get(i));
+						spamRuleCount = word.getSpamCount();
+						hamRuleCount = word.getHamCount();
+					}
+					ruleSpamProbability = (double) (spamRuleCount + 1)
+							/ (numOfSpamRules + syntacticRuleHashMap.size());
+					ruleHamProbability = (double) (hamRuleCount + 1)
+							/ (numOfHamRules + syntacticRuleHashMap.size());
+					hamProbability += Math.log(ruleHamProbability);
+					spamProbability += Math.log(ruleSpamProbability);
+					
+				}
+				hamProbability += Math.log(priorHamProbability);
+				spamProbability += Math.log(priorSpamProbablity);
+				if (hamProbability < spamProbability) 
+					testSpamCount++;
+				else
+					testHamCount++;
+			
 			}
 			System.out.print("\n\n Classified " + testSpamCount + " as Spam\n Classified  "
 					+ testHamCount + " as Ham\n Accuracy = ");
