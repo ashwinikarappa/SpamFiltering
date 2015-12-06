@@ -1,11 +1,14 @@
 package nlp.seastar.driver;
 
 import java.io.FileNotFoundException;
-
 import java.io.IOException;
-
 import nlp.seastar.baseline.Bayes;
-@SuppressWarnings({"unchecked", "deprecation"})
+
+/**
+ * 
+ * @author Ashwini
+ * @author Sagar
+ */
 public class SpamFilter {
 	public static void main(String[] args) {
 		String trainingDirectory = args[0];
@@ -18,13 +21,17 @@ public class SpamFilter {
 			// System.out.print("\n\n#### After handling swear words ####\n\n");
 			// bayes.trainWithSwearWords();
 			// bayes.testWithSwearWords();
-			System.out.print("\n\n#### After handling common spam words ####\n\n");
-		//	bayes.trainWithSpamWords();
-		//	bayes.testWithSpamWords();
+//			System.out.print("\n\n#### After handling common spam words ####\n\n");
+			// bayes.trainWithSpamWords();
+			// bayes.testWithSpamWords();
+
+//			System.out.println("\n\n#### After syntactic training ####\n\n");
+//			bayes.syntacticTrain();
+//			bayes.syntacticTest();
 			
-			System.out.println("\n\n#### After syntactic traning ####\n\n");
-			bayes.syntacticTrain();
-			bayes.syntacticTest();
+			System.out.println("\n\n#### After synonymy training ####\n\n");
+			bayes.synonymyTest();
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
